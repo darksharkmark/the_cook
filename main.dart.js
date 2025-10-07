@@ -76633,7 +76633,7 @@ var $async$pT=A.S(function(b,c){if(b===1){o.push(c)
 s=p}while(true)switch(s){case 0:j=a.split("-")
 if(j.length===0){q=null
 s=1
-break}l="cards/"+j[0]+"/"+a
+break}l="assets/cards/"+j[0]+"/"+a
 n=l+".png"
 m=l+".jpg"
 p=4
