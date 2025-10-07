@@ -76524,7 +76524,7 @@ uJ(){var s=0,r=A.R(t.H),q=this,p,o,n,m
 var $async$uJ=A.S(function(a,b){if(a===1)return A.O(b,r)
 while(true)switch(s){case 0:m=B.zx
 s=2
-return A.T($.DR().agJ("assets/data.csv"),$async$uJ)
+return A.T($.DR().agJ("assets/results/card_data.csv"),$async$uJ)
 case 2:o=m.eA(b)
 n=A.V(o).j("a7<1,N<C>>")
 n=A.a0(new A.a7(o,new A.abt(),n),n.j("as.E"))
