@@ -19,7 +19,7 @@ jobs:
       - name: 🧩 Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.24.0'  # or the version you're using
+          flutter-version: '3.35.5'  # or the version you're using
           channel: 'stable'
 
       - name: ⚡️ Cache Flutter SDK
