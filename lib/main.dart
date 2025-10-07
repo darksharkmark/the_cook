@@ -4,39 +4,38 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 
 void main() {
-  runApp(const CSVImageApp());
+  runApp(const OnePieceCardApp());
 }
 
-class CSVImageApp extends StatelessWidget {
-  const CSVImageApp({super.key});
+class OnePieceCardApp extends StatelessWidget {
+  const OnePieceCardApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'CSV Image Viewer',
+      title: 'One Piece Card Searcher',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
         useMaterial3: true,
       ),
-      home: const CSVImageScreen(),
+      home: const OnePieceCardScreen(),
     );
   }
 }
 
-class CSVImageScreen extends StatefulWidget {
-  const CSVImageScreen({super.key});
+class OnePieceCardScreen extends StatefulWidget {
+  const OnePieceCardScreen({super.key});
 
   @override
-  State<CSVImageScreen> createState() => _CSVImageScreenState();
+  State<OnePieceCardScreen> createState() => _OnePieceCardScreenState();
 }
 
-class _CSVImageScreenState extends State<CSVImageScreen> {
+class _OnePieceCardScreenState extends State<OnePieceCardScreen> {
   final ValueNotifier<List<List<String>>> _filteredData = ValueNotifier([]);
   List<List<String>> _allData = [];
   List<List<String>> _allDataLower = [];
   bool _loading = true;
-
   Timer? _debounce;
 
   @override
@@ -45,11 +44,43 @@ class _CSVImageScreenState extends State<CSVImageScreen> {
     _loadCSV();
   }
 
+  Future<String?> _assetPathForId(String id) async {
+    final parts = id.split('-');
+    if (parts.isEmpty) return null;
+    final folder = parts[0];
+
+    final pngPath = 'cards/$folder/$id.png';
+    final jpgPath = 'cards/$folder/$id.jpg';
+
+    try {
+      await rootBundle.load(pngPath);
+      return pngPath;
+    } catch (_) {}
+
+    try {
+      await rootBundle.load(jpgPath);
+      return jpgPath;
+    } catch (_) {}
+
+    return null;
+  }
+
   Future<void> _loadCSV() async {
-    final raw = await rootBundle.loadString('assets/results/card_data.csv');
+    final raw = await rootBundle.loadString('assets/card_data.csv');
     final lines = const LineSplitter().convert(raw);
 
     _allData = lines.map((line) => line.split('|')).toList();
+
+    final Map<String, List<String>> filteredUnique = {};
+    for (var row in _allData) {
+      final id = row[0];
+      final path = await _assetPathForId(id);
+      if (path != null && !filteredUnique.containsKey(id)) {
+        filteredUnique[id] = row;
+      }
+    }
+
+    _allData = filteredUnique.values.toList();
     _allDataLower = _allData
         .map((row) => row.map((cell) => cell.toLowerCase()).toList())
         .toList();
@@ -91,13 +122,6 @@ class _CSVImageScreenState extends State<CSVImageScreen> {
     });
   }
 
-  String _assetPathForId(String id) {
-    final parts = id.split('-');
-    if (parts.isEmpty) return '';
-    final folder = parts[0];
-    return 'assets/cards/$folder/$id.png';
-  }
-
   void _openFullScreen(BuildContext context, String assetPath) {
     Navigator.push(
       context,
@@ -116,7 +140,7 @@ class _CSVImageScreenState extends State<CSVImageScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('CSV Image Viewer'),
+        title: const Text('One Piece Card Searcher'),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(56),
           child: Padding(
@@ -157,42 +181,30 @@ class _CSVImageScreenState extends State<CSVImageScreen> {
                   itemBuilder: (context, index) {
                     final row = data[index];
                     final id = row[0];
-                    final assetPath = _assetPathForId(id);
-
-                    return GestureDetector(
-                      onTap: () => _openFullScreen(context, assetPath),
-                      child: Card(
-                        elevation: 2,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
-                          child: Image.asset(
-                            assetPath,
-                            fit: BoxFit.cover,
-                            frameBuilder:
-                                (
-                                  context,
-                                  child,
-                                  frame,
-                                  wasSynchronouslyLoaded,
-                                ) {
-                                  if (wasSynchronouslyLoaded) return child;
-                                  return frame == null
-                                      ? const Center(
-                                          child: CircularProgressIndicator(),
-                                        )
-                                      : child;
-                                },
-                            errorBuilder: (context, error, stackTrace) {
-                              return const Center(
-                                child: Icon(Icons.broken_image),
-                              );
-                            },
+                    return FutureBuilder<String?>(
+                      future: _assetPathForId(id),
+                      builder: (context, snapshot) {
+                        if (!snapshot.hasData || snapshot.data == null) {
+                          return const SizedBox.shrink(); // skip missing image
+                        }
+                        final assetPath = snapshot.data!;
+                        return GestureDetector(
+                          onTap: () => _openFullScreen(context, assetPath),
+                          child: Card(
+                            elevation: 2,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(4.0),
+                              child: Image.asset(
+                                assetPath,
+                                fit: BoxFit.contain,
+                              ),
+                            ),
                           ),
-                        ),
-                      ),
+                        );
+                      },
                     );
                   },
                 );
