@@ -42,6 +42,8 @@ class _CSVImageScreenState extends State<CSVImageScreen> with AutomaticKeepAlive
     _debounce = Timer(const Duration(milliseconds: 300), () {
       _filteredData.value = _dataLoader.filter(_searchQuery);
     });
+    //id|name|rarity|type|attribute|power|counter|color|card_type|effect|trigger_text|image_url|alternate_art|series_id|series_name
+    // holding csv values here for now
   }
 
   void _openFullScreen(BuildContext context, String assetPath) {
