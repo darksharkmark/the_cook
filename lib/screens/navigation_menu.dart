@@ -1,6 +1,9 @@
-import'package:flutter/material.dart';
-import'package:get/get.dart';
+
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:the_cook/screens/csv_image_screen.dart';
+import 'package:the_cook/screens/deck_list_screen.dart';
+import 'package:the_cook/screens/setting_screen.dart';
 
 class NavigationMenu extends StatelessWidget {
   const NavigationMenu({super.key});
@@ -17,14 +20,17 @@ class NavigationMenu extends StatelessWidget {
           destinations: [
             NavigationDestination(icon: Icon(Icons.home), label: "Card List"),
             NavigationDestination(icon: Icon(Icons.view_carousel), label: "Decks"),
-            NavigationDestination(icon: Icon(Icons.view_carousel), label: "Battle"),
+            NavigationDestination(icon: Icon(Icons.view_column), label: "Battle"),
             NavigationDestination(icon: Icon(Icons.settings), label: "Settings"),
             
           ]
         ),
       ),
 
-      body: Obx(() => controller.screens[controller.selectedIndex.value]),
+      body: Obx(() => IndexedStack(
+        index: controller.selectedIndex.value,
+        children: controller.screens,
+      )),
     );
 
 
@@ -34,6 +40,12 @@ class NavigationMenu extends StatelessWidget {
 class NavigationController extends GetxController{
   final Rx<int> selectedIndex = 0.obs;
 
-  final screens = [const CSVImageScreen(), Container(color:Colors.blue), Container(color:Colors.blue), Container(color:Colors.yellow)]; 
+
+  final screens = [
+    const CSVImageScreen(),
+    const DeckListScreen(),
+    Container(color:Colors.blue),
+    const SettingScreen(),
+  ];
 
 }

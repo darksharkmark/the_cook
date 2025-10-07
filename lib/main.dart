@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:the_cook/screens/navigation_menu.dart';
-import 'screens/csv_image_screen.dart';
 
 void main() {
   runApp(const CSVImageApp());
@@ -22,3 +21,4 @@ class CSVImageApp extends StatelessWidget {
     );
   }
 }
+

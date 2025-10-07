@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import '../widgets/full_screen_image.dart';
 import '../utils/card_data_loader.dart';
@@ -11,16 +10,23 @@ class CSVImageScreen extends StatefulWidget {
   State<CSVImageScreen> createState() => _CSVImageScreenState();
 }
 
-class _CSVImageScreenState extends State<CSVImageScreen> {
+
+class _CSVImageScreenState extends State<CSVImageScreen> with AutomaticKeepAliveClientMixin {
   final ValueNotifier<List<List<String>>> _filteredData = ValueNotifier([]);
   late CardDataLoader _dataLoader;
   bool _loading = true;
   Timer? _debounce;
+  String _searchQuery = '';
+  late TextEditingController _controller;
+  late ScrollController _scrollController;
 
+  @override
   @override
   void initState() {
     super.initState();
     _dataLoader = CardDataLoader();
+    _controller = TextEditingController(text: _searchQuery);
+    _scrollController = ScrollController();
     _loadCSV();
   }
 
@@ -31,9 +37,10 @@ class _CSVImageScreenState extends State<CSVImageScreen> {
   }
 
   void _onSearchChanged(String query) {
+    _searchQuery = query;
     _debounce?.cancel();
     _debounce = Timer(const Duration(milliseconds: 300), () {
-      _filteredData.value = _dataLoader.filter(query);
+      _filteredData.value = _dataLoader.filter(_searchQuery);
     });
   }
 
@@ -45,14 +52,22 @@ class _CSVImageScreenState extends State<CSVImageScreen> {
   }
 
   @override
+  @override
   void dispose() {
     _filteredData.dispose();
     _debounce?.cancel();
+    _controller.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
   @override
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
   Widget build(BuildContext context) {
+    super.build(context);
     return Scaffold(
       appBar: AppBar(
         title: const Text('One Piece Card Searcher'),
@@ -61,6 +76,7 @@ class _CSVImageScreenState extends State<CSVImageScreen> {
           child: Padding(
             padding: const EdgeInsets.all(8.0),
             child: TextField(
+              controller: _controller,
               onChanged: _onSearchChanged,
               decoration: InputDecoration(
                 hintText: 'Search (multiple words supported)...',
@@ -76,7 +92,6 @@ class _CSVImageScreenState extends State<CSVImageScreen> {
           ),
         ),
       ),
-
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : ValueListenableBuilder<List<List<String>>>(
@@ -86,6 +101,7 @@ class _CSVImageScreenState extends State<CSVImageScreen> {
                   return const Center(child: Text('No results found'));
                 }
                 return GridView.builder(
+                  controller: _scrollController,
                   padding: const EdgeInsets.all(8),
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 3,
@@ -130,7 +146,6 @@ class _CSVImageScreenState extends State<CSVImageScreen> {
                 );
               },
             ),
-      
     );
   }
 }
