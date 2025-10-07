@@ -1,183 +1,168 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
-import 'package:csv/csv.dart';
-import 'package:flutter/foundation.dart';
 
 void main() {
-  runApp(const CsvPaginatedApp());
+  runApp(const CSVViewerApp());
 }
 
-class CsvPaginatedApp extends StatelessWidget {
-  const CsvPaginatedApp({super.key});
+class CSVViewerApp extends StatelessWidget {
+  const CSVViewerApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
+      title: 'CSV Viewer',
       debugShowCheckedModeBanner: false,
-      home: CsvPaginatedPage(),
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+        useMaterial3: true,
+      ),
+      home: const CSVScreen(),
     );
   }
 }
 
-class CsvPaginatedPage extends StatefulWidget {
-  const CsvPaginatedPage({super.key});
+class CSVScreen extends StatefulWidget {
+  const CSVScreen({super.key});
 
   @override
-  State<CsvPaginatedPage> createState() => _CsvPaginatedPageState();
+  State<CSVScreen> createState() => _CSVScreenState();
 }
 
-class _CsvPaginatedPageState extends State<CsvPaginatedPage> {
-  List<String> headers = [];
-  List<List<String>> rows = [];
+class _CSVScreenState extends State<CSVScreen> {
+  final ValueNotifier<List<List<String>>> _filteredData = ValueNotifier([]);
+  List<List<String>> _allData = [];
+  List<List<String>> _allDataLower = [];
+  bool _loading = true;
 
-  static const int rowsPerPage = 100;
-  int currentPage = 0;
-  bool loading = true;
+  Timer? _debounce;
 
   @override
   void initState() {
     super.initState();
-    _loadCsv();
+    _loadCSV();
   }
 
-  Future<void> _loadCsv() async {
-    try {
-      final raw = await rootBundle.loadString('assets/results/card_data.csv');
-      final data = await compute(parseCsvInBackground, raw);
+  Future<void> _loadCSV() async {
+    final raw = await rootBundle.loadString('assets/results/card_data.csv');
 
-      if (data.isEmpty) return;
+    // Parse CSV fast using split('|')
+    final lines = const LineSplitter().convert(raw);
+    _allData = lines.map((line) => line.split('|')).toList();
 
-      setState(() {
-        headers = data.first;
-        rows = data.skip(1).toList();
-        loading = false;
-      });
-    } catch (e) {
-      debugPrint('Error loading CSV: $e');
-    }
+    // Precompute lowercased data for fast search
+    _allDataLower = _allData
+        .map((row) => row.map((cell) => cell.toLowerCase()).toList())
+        .toList();
+
+    _filteredData.value = _allData;
+    setState(() => _loading = false);
   }
 
-  // Show 100 rows per page
-  List<List<String>> get _paginatedRows {
-    final start = currentPage * rowsPerPage;
-    final end = (start + rowsPerPage).clamp(0, rows.length);
-    return rows.sublist(start, end);
+  void _onSearchChanged(String query) {
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 300), () {
+      if (query.isEmpty) {
+        _filteredData.value = _allData;
+        return;
+      }
+
+      final words = query
+          .toLowerCase()
+          .split(RegExp(r'\s+'))
+          .where((w) => w.isNotEmpty)
+          .toList();
+
+      if (words.isEmpty) {
+        _filteredData.value = _allData;
+        return;
+      }
+
+      // Filter using pre-lowered data
+      final filtered = <List<String>>[];
+      for (int i = 0; i < _allData.length; i++) {
+        final rowLower = _allDataLower[i];
+        if (words.every(
+          (word) => rowLower.any((cell) => cell.contains(word)),
+        )) {
+          filtered.add(_allData[i]);
+        }
+      }
+
+      _filteredData.value = filtered;
+    });
   }
 
-  void _nextPage() {
-    if ((currentPage + 1) * rowsPerPage < rows.length) {
-      setState(() => currentPage++);
-    }
-  }
-
-  void _prevPage() {
-    if (currentPage > 0) {
-      setState(() => currentPage--);
-    }
+  @override
+  void dispose() {
+    _filteredData.dispose();
+    _debounce?.cancel();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    if (loading) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
-    }
-
     return Scaffold(
-      appBar: AppBar(title: const Text('Large CSV Viewer')),
-      body: Column(
-        children: [
-          // Header row
-          Container(
-            color: Colors.blue.shade50,
-            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-            child: Row(
-              children: headers
-                  .map(
-                    (h) => Expanded(
-                      child: Text(
-                        h,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  )
-                  .toList(),
+      appBar: AppBar(
+        title: const Text('One Piece Card Searcher'),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(56),
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: TextField(
+              onChanged: _onSearchChanged,
+              decoration: InputDecoration(
+                hintText: 'Search (multiple words supported)...',
+                filled: true,
+                fillColor: Colors.white,
+                prefixIcon: const Icon(Icons.search),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
+              ),
             ),
           ),
+        ),
+      ),
+      body: _loading
+          ? const Center(child: CircularProgressIndicator())
+          : ValueListenableBuilder<List<List<String>>>(
+              valueListenable: _filteredData,
+              builder: (context, data, _) {
+                if (data.isEmpty) {
+                  return const Center(child: Text('No results found'));
+                }
 
-          // Scrollable rows
-          Expanded(
-            child: ListView.builder(
-              itemCount: _paginatedRows.length,
-              itemBuilder: (context, index) {
-                final row = _paginatedRows[index];
-                return Padding(
-                  padding: const EdgeInsets.symmetric(
-                    vertical: 4,
-                    horizontal: 8,
-                  ),
-                  child: Row(
-                    children: row
-                        .map(
-                          (cell) => Expanded(
-                            child: Text(cell, overflow: TextOverflow.ellipsis),
+                return ListView.builder(
+                  itemCount: data.length,
+                  itemBuilder: (context, index) {
+                    final row = data[index];
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8.0,
+                        vertical: 4.0,
+                      ),
+                      child: Card(
+                        elevation: 1,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Text(
+                            row.join(' | '),
+                            style: const TextStyle(fontSize: 14),
                           ),
-                        )
-                        .toList(),
-                  ),
+                        ),
+                      ),
+                    );
+                  },
                 );
               },
             ),
-          ),
-
-          // Pagination controls
-          Container(
-            color: Colors.grey.shade100,
-            padding: const EdgeInsets.all(8),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Page ${currentPage + 1} of ${(rows.length / rowsPerPage).ceil()}',
-                ),
-                Row(
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.chevron_left),
-                      onPressed: currentPage > 0 ? _prevPage : null,
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.chevron_right),
-                      onPressed: (currentPage + 1) * rowsPerPage < rows.length
-                          ? _nextPage
-                          : null,
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
     );
   }
-}
-
-/// Parses CSV on a background thread for speed
-List<List<String>> parseCsvInBackground(String raw) {
-  final lines = const LineSplitter().convert(raw);
-  final parsed = <List<String>>[];
-
-  for (final line in lines) {
-    final row = const CsvToListConverter(
-      fieldDelimiter: '|',
-    ).convert(line).first.map((e) => e.toString()).toList();
-    parsed.add(row);
-  }
-
-  return parsed;
 }
