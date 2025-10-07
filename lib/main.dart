@@ -4,11 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 
 void main() {
-  runApp(const OnePieceCardApp());
+  runApp(const CSVImageApp());
 }
 
-class OnePieceCardApp extends StatelessWidget {
-  const OnePieceCardApp({super.key});
+class CSVImageApp extends StatelessWidget {
+  const CSVImageApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -19,23 +19,24 @@ class OnePieceCardApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
         useMaterial3: true,
       ),
-      home: const OnePieceCardScreen(),
+      home: const CSVImageScreen(),
     );
   }
 }
 
-class OnePieceCardScreen extends StatefulWidget {
-  const OnePieceCardScreen({super.key});
+class CSVImageScreen extends StatefulWidget {
+  const CSVImageScreen({super.key});
 
   @override
-  State<OnePieceCardScreen> createState() => _OnePieceCardScreenState();
+  State<CSVImageScreen> createState() => _CSVImageScreenState();
 }
 
-class _OnePieceCardScreenState extends State<OnePieceCardScreen> {
+class _CSVImageScreenState extends State<CSVImageScreen> {
   final ValueNotifier<List<List<String>>> _filteredData = ValueNotifier([]);
   List<List<String>> _allData = [];
   List<List<String>> _allDataLower = [];
   bool _loading = true;
+
   Timer? _debounce;
 
   @override
@@ -44,43 +45,11 @@ class _OnePieceCardScreenState extends State<OnePieceCardScreen> {
     _loadCSV();
   }
 
-  Future<String?> _assetPathForId(String id) async {
-    final parts = id.split('-');
-    if (parts.isEmpty) return null;
-    final folder = parts[0];
-
-    final pngPath = 'cards/$folder/$id.png';
-    final jpgPath = 'cards/$folder/$id.jpg';
-
-    try {
-      await rootBundle.load(pngPath);
-      return pngPath;
-    } catch (_) {}
-
-    try {
-      await rootBundle.load(jpgPath);
-      return jpgPath;
-    } catch (_) {}
-
-    return null;
-  }
-
   Future<void> _loadCSV() async {
     final raw = await rootBundle.loadString('assets/card_data.csv');
     final lines = const LineSplitter().convert(raw);
 
     _allData = lines.map((line) => line.split('|')).toList();
-
-    final Map<String, List<String>> filteredUnique = {};
-    for (var row in _allData) {
-      final id = row[0];
-      final path = await _assetPathForId(id);
-      if (path != null && !filteredUnique.containsKey(id)) {
-        filteredUnique[id] = row;
-      }
-    }
-
-    _allData = filteredUnique.values.toList();
     _allDataLower = _allData
         .map((row) => row.map((cell) => cell.toLowerCase()).toList())
         .toList();
@@ -120,6 +89,29 @@ class _OnePieceCardScreenState extends State<OnePieceCardScreen> {
 
       _filteredData.value = filtered;
     });
+  }
+
+  Future<String?> _assetPathForId(String id) async {
+    final parts = id.split('-');
+    if (parts.isEmpty) return null;
+    final folder = parts[0];
+
+    // Try png first, then jpg
+    final pngPath = '/cards/$folder/$id.png';
+    final jpgPath = '/cards/$folder/$id.jpg';
+
+    try {
+      await rootBundle.load(pngPath);
+      return pngPath;
+    } catch (_) {}
+
+    try {
+      await rootBundle.load(jpgPath);
+      return jpgPath;
+    } catch (_) {}
+
+    // File not found
+    return null;
   }
 
   void _openFullScreen(BuildContext context, String assetPath) {
@@ -181,13 +173,17 @@ class _OnePieceCardScreenState extends State<OnePieceCardScreen> {
                   itemBuilder: (context, index) {
                     final row = data[index];
                     final id = row[0];
+
                     return FutureBuilder<String?>(
                       future: _assetPathForId(id),
                       builder: (context, snapshot) {
                         if (!snapshot.hasData || snapshot.data == null) {
-                          return const SizedBox.shrink(); // skip missing image
+                          // Skip missing images
+                          return const SizedBox.shrink();
                         }
+
                         final assetPath = snapshot.data!;
+
                         return GestureDetector(
                           onTap: () => _openFullScreen(context, assetPath),
                           child: Card(
@@ -195,11 +191,16 @@ class _OnePieceCardScreenState extends State<OnePieceCardScreen> {
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8),
                             ),
-                            child: Padding(
-                              padding: const EdgeInsets.all(4.0),
-                              child: Image.asset(
-                                assetPath,
-                                fit: BoxFit.contain,
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              child: Container(
+                                color: Colors.grey[200],
+                                child: Center(
+                                  child: Image.asset(
+                                    assetPath,
+                                    fit: BoxFit.contain,
+                                  ),
+                                ),
                               ),
                             ),
                           ),
