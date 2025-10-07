@@ -97,8 +97,8 @@ class _CSVImageScreenState extends State<CSVImageScreen> {
     final folder = parts[0];
 
     // Try png first, then jpg
-    final pngPath = 'cards/$folder/$id.png';
-    final jpgPath = 'cards/$folder/$id.jpg';
+    final pngPath = 'assets/cards/$folder/$id.png';
+    final jpgPath = 'assets/cards/$folder/$id.jpg';
 
     try {
       await rootBundle.load(pngPath);
