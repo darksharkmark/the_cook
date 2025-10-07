@@ -34,7 +34,7 @@ jobs:
         run: flutter pub get
 
       - name: 🏗️ Build web release
-        run: flutter build web --release
+        run: flutter build web --release --base-href /the_cook/
 
       - name: 🚀 Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
