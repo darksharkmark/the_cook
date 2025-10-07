@@ -46,7 +46,7 @@ class _CSVImageScreenState extends State<CSVImageScreen> {
   }
 
   Future<void> _loadCSV() async {
-    final raw = await rootBundle.loadString('assets/data.csv');
+    final raw = await rootBundle.loadString('assets/results/card_data.csv');
     final lines = const LineSplitter().convert(raw);
 
     _allData = lines.map((line) => line.split('|')).toList();
