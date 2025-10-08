@@ -7,10 +7,10 @@ class DeckListScreen extends StatefulWidget {
   const DeckListScreen({super.key});
 
   @override
-  _DeckListScreenState createState() => _DeckListScreenState();
+  DeckListScreenState createState() => DeckListScreenState();
 }
 
-class _DeckListScreenState extends State<DeckListScreen> with AutomaticKeepAliveClientMixin {
+class DeckListScreenState extends State<DeckListScreen> with AutomaticKeepAliveClientMixin {
   List<Map<String, dynamic>> _decks = [];
   bool _loading = true;
 

@@ -4,16 +4,15 @@ class SettingScreen  extends StatefulWidget{
   const SettingScreen({super.key});
 
   @override
-  _SettingScreenState createState() => _SettingScreenState();
+  SettingScreenState createState() => SettingScreenState();
 }
 
-class _SettingScreenState extends State<SettingScreen> with AutomaticKeepAliveClientMixin {
+class SettingScreenState extends State<SettingScreen> with AutomaticKeepAliveClientMixin {
   @override
   bool get wantKeepAlive => true;
   @override
   Widget build(BuildContext context) {
-  super.build(context);
+    super.build(context);
     return Scaffold();
   }
-  
 }
