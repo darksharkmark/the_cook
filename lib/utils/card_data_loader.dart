@@ -33,20 +33,13 @@ class CardDataLoader {
     return filtered;
   }
 
-  Future<String?> assetPathForId(String id) async {
+  String assetPathForId(String id) {
     final parts = id.split('-');
-    if (parts.isEmpty) return null;
+    if (parts.isEmpty) return '';
     final folder = parts[0];
     final pngPath = 'assets/cards/$folder/$id.png';
-    final jpgPath = 'assets/cards/$folder/$id.jpg';
-    try {
-      await rootBundle.load(pngPath);
-      return pngPath;
-    } catch (_) {}
-    try {
-      await rootBundle.load(jpgPath);
-      return jpgPath;
-    } catch (_) {}
-    return null;
+    // final jpgPath = 'assets/cards/$folder/$id.jpg';
+    // For web, do not check existence, just return png path
+    return pngPath;
   }
 }

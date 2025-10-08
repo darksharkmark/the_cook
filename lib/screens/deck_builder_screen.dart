@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../utils/card_data_loader.dart';
 import '../utils/deck_storage.dart';
+import '../widgets/card_image_widget.dart';
 
 class DeckBuilderScreen extends StatefulWidget {
   final Map<String, dynamic>? initialDeck;
@@ -181,25 +182,14 @@ class DeckBuilderScreenState extends State<DeckBuilderScreen> {
                         },
                         child: Column(
                           children: [
-                            Expanded(
-                              child: FutureBuilder<String?>(
-                                future: CardDataLoader().assetPathForId(leader['id']),
-                                builder: (context, snapshot) {
-                                  if (!snapshot.hasData || snapshot.data == null) {
-                                    return const SizedBox.expand();
-                                  }
-                                  return ClipRRect(
-                                    borderRadius: BorderRadius.circular(8),
-                                    child: Image.asset(
-                                      snapshot.data!,
-                                      fit: BoxFit.cover,
-                                      width: double.infinity,
-                                      height: double.infinity,
-                                    ),
-                                  );
-                                },
+                              Expanded(
+                                child: CardImageWidget(
+                                  id: leader['id'],
+                                  width: double.infinity,
+                                  height: double.infinity,
+                                  borderRadius: 8,
+                                ),
                               ),
-                            ),
                             Text(leader['name'], textAlign: TextAlign.center),
                           ],
                         ),
@@ -212,22 +202,11 @@ class DeckBuilderScreenState extends State<DeckBuilderScreen> {
           : Column(
               children: [
                 ListTile(
-                  leading: FutureBuilder<String?>(
-                    future: CardDataLoader().assetPathForId(_selectedLeader!['id']),
-                    builder: (context, snapshot) {
-                      if (!snapshot.hasData || snapshot.data == null) {
-                        return const SizedBox(width: 48, height: 48);
-                      }
-                      return ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: Image.asset(
-                          snapshot.data!,
-                          width: 48,
-                          height: 48,
-                          fit: BoxFit.cover,
-                        ),
-                      );
-                    },
+                  leading: CardImageWidget(
+                    id: _selectedLeader!['id'],
+                    width: 48,
+                    height: 48,
+                    borderRadius: 8,
                   ),
                   title: Text(_selectedLeader!['name']),
                   trailing: IconButton(
@@ -262,21 +241,10 @@ class DeckBuilderScreenState extends State<DeckBuilderScreen> {
                       final card = _allCards.firstWhere((c) => c['id'] == cardId);
                       return Stack(
                         children: [
-                          FutureBuilder<String?>(
-                            future: CardDataLoader().assetPathForId(card['id']),
-                            builder: (context, snapshot) {
-                              if (!snapshot.hasData || snapshot.data == null) {
-                                return const SizedBox(height: 60);
-                              }
-                              return ClipRRect(
-                                borderRadius: BorderRadius.circular(8),
-                                child: Image.asset(
-                                  snapshot.data!,
-                                  height: 60,
-                                  fit: BoxFit.cover,
-                                ),
-                              );
-                            },
+                          CardImageWidget(
+                            id: card['id'],
+                            height: 60,
+                            borderRadius: 8,
                           ),
                           Positioned(
                             top: 2,
@@ -315,24 +283,11 @@ class DeckBuilderScreenState extends State<DeckBuilderScreen> {
                           GestureDetector(
                             onTap: () => _addCard(card),
                             onLongPress: () => _removeCard(card),
-                            child: Expanded(
-                              child: FutureBuilder<String?>(
-                                future: CardDataLoader().assetPathForId(card['id']),
-                                builder: (context, snapshot) {
-                                  if (!snapshot.hasData || snapshot.data == null) {
-                                    return const SizedBox.expand();
-                                  }
-                                  return ClipRRect(
-                                    borderRadius: BorderRadius.circular(8),
-                                    child: Image.asset(
-                                      snapshot.data!,
-                                      fit: BoxFit.cover,
-                                      width: double.infinity,
-                                      height: double.infinity,
-                                    ),
-                                  );
-                                },
-                              ),
+                            child: CardImageWidget(
+                              id: card['id'],
+                              width: double.infinity,
+                              height: double.infinity,
+                              borderRadius: 8,
                             ),
                           ),
                           if (_deckCards[card['id']] != null && _deckCards[card['id']]! > 0)
