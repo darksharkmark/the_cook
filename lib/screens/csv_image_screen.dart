@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import '../widgets/full_screen_image.dart';
 import '../utils/card_data_loader.dart';
+import '../widgets/card_image_widget.dart';
 
 class CSVImageScreen extends StatefulWidget {
   const CSVImageScreen({super.key});
@@ -114,35 +115,28 @@ class _CSVImageScreenState extends State<CSVImageScreen> with AutomaticKeepAlive
                   itemBuilder: (context, index) {
                     final row = data[index];
                     final id = row[0];
-                    return FutureBuilder<String?>(
-                      future: _dataLoader.assetPathForId(id),
-                      builder: (context, snapshot) {
-                        if (!snapshot.hasData || snapshot.data == null) {
-                          return const SizedBox.shrink();
-                        }
-                        final assetPath = snapshot.data!;
-                        return GestureDetector(
-                          onTap: () => _openFullScreen(context, assetPath),
-                          child: Card(
-                            elevation: 2,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(8),
-                              child: Container(
-                                color: Colors.grey[200],
-                                child: Center(
-                                  child: Image.asset(
-                                    assetPath,
-                                    fit: BoxFit.contain,
-                                  ),
-                                ),
+                    return GestureDetector(
+                      onTap: () => _openFullScreen(context, id),
+                      child: Card(
+                        elevation: 2,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: Container(
+                            color: Colors.grey[200],
+                            child: Center(
+                              child: CardImageWidget(
+                                id: id,
+                                width: double.infinity,
+                                height: double.infinity,
+                                borderRadius: 8,
                               ),
                             ),
                           ),
-                        );
-                      },
+                        ),
+                      ),
                     );
                   },
                 );

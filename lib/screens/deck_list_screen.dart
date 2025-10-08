@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../utils/deck_storage.dart';
-import '../utils/card_data_loader.dart';
+// import '../utils/card_data_loader.dart';
+import '../widgets/card_image_widget.dart';
 import 'deck_builder_screen.dart';
 
 class DeckListScreen extends StatefulWidget {
@@ -68,22 +69,11 @@ class DeckListScreenState extends State<DeckListScreen> with AutomaticKeepAliveC
                       return Card(
                         margin: const EdgeInsets.symmetric(vertical: 8),
                         child: ListTile(
-                          leading: FutureBuilder<String?>(
-                            future: CardDataLoader().assetPathForId(leaderId),
-                            builder: (context, snapshot) {
-                              if (!snapshot.hasData || snapshot.data == null) {
-                                return const SizedBox(width: 48, height: 48);
-                              }
-                              return ClipRRect(
-                                borderRadius: BorderRadius.circular(8),
-                                child: Image.asset(
-                                  snapshot.data!,
-                                  width: 48,
-                                  height: 48,
-                                  fit: BoxFit.cover,
-                                ),
-                              );
-                            },
+                          leading: CardImageWidget(
+                            id: leaderId,
+                            width: 48,
+                            height: 48,
+                            borderRadius: 8,
                           ),
                           title: Text(deck['name'] ?? leaderName),
                           subtitle: Text('Cards: ${((deck['cards'] as List).fold<int>(0, (sum, entry) => sum + (entry[1] as int)))}'),
