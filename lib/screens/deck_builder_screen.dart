@@ -7,10 +7,10 @@ class DeckBuilderScreen extends StatefulWidget {
   const DeckBuilderScreen({super.key, this.initialDeck});
 
   @override
-  _DeckBuilderScreenState createState() => _DeckBuilderScreenState();
+  DeckBuilderScreenState createState() => DeckBuilderScreenState();
 }
 
-class _DeckBuilderScreenState extends State<DeckBuilderScreen> {
+class DeckBuilderScreenState extends State<DeckBuilderScreen> {
   List<Map<String, dynamic>> _allCards = [];
   List<Map<String, dynamic>> _leaders = [];
   String _search = '';
@@ -27,7 +27,7 @@ class _DeckBuilderScreenState extends State<DeckBuilderScreen> {
     super.initState();
     if (widget.initialDeck != null) {
       _deckName = widget.initialDeck!['name'] ?? '';
-      _deckId = widget.initialDeck!['id'] ?? null;
+      _deckId = widget.initialDeck!['id'];
     }
     _deckNameController.text = _deckName;
     _deckNameController.addListener(() {
@@ -284,7 +284,7 @@ class _DeckBuilderScreenState extends State<DeckBuilderScreen> {
                             child: Container(
                               padding: const EdgeInsets.all(4),
                               decoration: BoxDecoration(
-                                color: Colors.black.withOpacity(0.7),
+                                color: Colors.black.withAlpha((0.7 * 255).toInt()),
                                 borderRadius: BorderRadius.circular(10),
                               ),
                               child: Text(
@@ -342,7 +342,7 @@ class _DeckBuilderScreenState extends State<DeckBuilderScreen> {
                               child: Container(
                                 padding: const EdgeInsets.all(6),
                                 decoration: BoxDecoration(
-                                  color: Colors.black.withOpacity(0.7),
+                                  color: Colors.black.withAlpha((0.7 * 255).toInt()),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: Text(
