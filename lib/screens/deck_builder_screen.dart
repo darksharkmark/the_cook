@@ -14,7 +14,8 @@ class DeckBuilderScreen extends StatefulWidget {
 class DeckBuilderScreenState extends State<DeckBuilderScreen> {
   List<Map<String, dynamic>> _allCards = [];
   List<Map<String, dynamic>> _leaders = [];
-  String _search = '';
+  String _leaderSearch = '';
+  String _cardSearch = '';
   Map<String, dynamic>? _selectedLeader;
   Map<String, int> _deckCards = {};
   bool _saving = false;
@@ -76,17 +77,21 @@ class DeckBuilderScreenState extends State<DeckBuilderScreen> {
   }
 
   List<Map<String, dynamic>> get _filteredLeaders {
-    if (_search.isEmpty) return _leaders;
-    return _leaders.where((c) => c['name'].toLowerCase().contains(_search.toLowerCase())).toList();
+    if (_leaderSearch.isEmpty) return _leaders;
+    return _leaders.where((c) => c['name'].toLowerCase().contains(_leaderSearch.toLowerCase())).toList();
   }
 
   List<Map<String, dynamic>> get _filteredCards {
     if (_selectedLeader == null) return [];
     final leaderColors = (_selectedLeader!['color'] as String).split('/').map((c) => c.trim().toLowerCase()).toList();
-    return _allCards.where((card) {
+    final filtered = _allCards.where((card) {
       final cardColor = (card['color'] ?? '').toString().toLowerCase();
+      // Exclude leaders from card search
+      if ((card['type'] ?? '').toString().toUpperCase() == 'LEADER') return false;
       return leaderColors.any((lc) => cardColor.contains(lc));
     }).toList();
+    if (_cardSearch.isEmpty) return filtered;
+    return filtered.where((card) => card['name'].toLowerCase().contains(_cardSearch.toLowerCase())).toList();
   }
 
   int get _deckSize => _deckCards.values.fold(0, (a, b) => a + b);
@@ -141,7 +146,7 @@ class DeckBuilderScreenState extends State<DeckBuilderScreen> {
                       labelText: 'Search Leader',
                       prefixIcon: Icon(Icons.search),
                     ),
-                    onChanged: (v) => setState(() => _search = v),
+                    onChanged: (v) => setState(() => _leaderSearch = v),
                   ),
                 ),
                 Padding(
@@ -246,18 +251,21 @@ class DeckBuilderScreenState extends State<DeckBuilderScreen> {
                             height: 60,
                             borderRadius: 8,
                           ),
-                          Positioned(
-                            top: 2,
-                            right: 2,
-                            child: Container(
-                              padding: const EdgeInsets.all(4),
-                              decoration: BoxDecoration(
-                                color: Colors.black.withAlpha((0.7 * 255).toInt()),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: Text(
-                                '${_deckCards[cardId]}',
-                                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
+                          // Overlay the quantity directly on top of the image (centered)
+                          Positioned.fill(
+                            child: Align(
+                              alignment: Alignment.topRight,
+                              child: Container(
+                                margin: const EdgeInsets.all(6),
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: Colors.black.withOpacity(0.7),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Text(
+                                  '${_deckCards[cardId]}',
+                                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                                ),
                               ),
                             ),
                           ),
@@ -274,7 +282,7 @@ class DeckBuilderScreenState extends State<DeckBuilderScreen> {
                       labelText: 'Search Cards',
                       prefixIcon: Icon(Icons.search),
                     ),
-                    onChanged: (v) => setState(() => _search = v),
+                    onChanged: (v) => setState(() => _cardSearch = v),
                   ),
                 ),
                 // Card selection grid, 5 per row
