@@ -266,11 +266,23 @@ class DeckBuilderScreenState extends State<DeckBuilderScreen> {
                     },
                   ),
                 ),
+                // Card search bar in the middle
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: TextField(
+                    decoration: const InputDecoration(
+                      labelText: 'Search Cards',
+                      prefixIcon: Icon(Icons.search),
+                    ),
+                    onChanged: (v) => setState(() => _search = v),
+                  ),
+                ),
+                // Card selection grid, 5 per row
                 Expanded(
                   child: GridView.builder(
                     padding: EdgeInsets.zero,
                     gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 3,
+                      crossAxisCount: 5,
                       childAspectRatio: 0.7,
                       crossAxisSpacing: 0,
                       mainAxisSpacing: 0,
