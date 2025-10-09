@@ -12,6 +12,7 @@ class DeckBuilderScreen extends StatefulWidget {
 }
 
 class DeckBuilderScreenState extends State<DeckBuilderScreen> {
+  int? _editingCardIndex;
   List<Map<String, dynamic>> _allCards = [];
   List<Map<String, dynamic>> _leaders = [];
   String _leaderSearch = '';
@@ -244,32 +245,72 @@ class DeckBuilderScreenState extends State<DeckBuilderScreen> {
                     itemBuilder: (context, i) {
                       final cardId = _deckCards.keys.elementAt(i);
                       final card = _allCards.firstWhere((c) => c['id'] == cardId);
-                      return Stack(
-                        children: [
-                          CardImageWidget(
-                            id: card['id'],
-                            height: 60,
-                            borderRadius: 8,
-                          ),
-                          // Overlay the quantity directly on top of the image (centered)
-                          Positioned.fill(
-                            child: Align(
-                              alignment: Alignment.topRight,
-                              child: Container(
-                                margin: const EdgeInsets.all(6),
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: Colors.black.withOpacity(0.7),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Text(
-                                  '${_deckCards[cardId]}',
-                                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                      return GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            _editingCardIndex = i;
+                          });
+                        },
+                        child: Stack(
+                          children: [
+                            CardImageWidget(
+                              id: card['id'],
+                              height: 60,
+                              borderRadius: 8,
+                            ),
+                            Positioned.fill(
+                              child: Align(
+                                alignment: Alignment.topRight,
+                                child: Container(
+                                  margin: const EdgeInsets.all(6),
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: Colors.black.withOpacity(0.7),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Text(
+                                    '${_deckCards[cardId]}',
+                                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                        ],
+                            if (_editingCardIndex == i)
+                              Positioned.fill(
+                                child: Container(
+                                  color: Colors.black.withOpacity(0.3),
+                                  child: Center(
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        IconButton(
+                                          icon: const Icon(Icons.remove_circle, color: Colors.white, size: 32),
+                                          onPressed: () {
+                                            setState(() {
+                                              _deckCards[cardId] = (_deckCards[cardId]! - 1).clamp(1, 99);
+                                              if (_deckCards[cardId] == 0) {
+                                                _deckCards.remove(cardId);
+                                                _editingCardIndex = null;
+                                              }
+                                            });
+                                          },
+                                        ),
+                                        const SizedBox(width: 16),
+                                        IconButton(
+                                          icon: const Icon(Icons.add_circle, color: Colors.white, size: 32),
+                                          onPressed: () {
+                                            setState(() {
+                                              _deckCards[cardId] = (_deckCards[cardId]! + 1).clamp(1, 99);
+                                            });
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
                       );
                     },
                   ),

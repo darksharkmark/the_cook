@@ -13,6 +13,16 @@ class CSVImageScreen extends StatefulWidget {
 
 
 class _CSVImageScreenState extends State<CSVImageScreen> with AutomaticKeepAliveClientMixin {
+  final List<String> _colorOptions = ['red', 'green', 'purple', 'black', 'yellow', 'blue'];
+  final Set<String> _selectedColors = {};
+  List<List<String>> _filterWithColors(List<List<String>> data) {
+    if (_selectedColors.isEmpty) return data;
+    return data.where((row) {
+      if (row.length < 8) return false;
+      final colorField = row[7].toLowerCase();
+      return _selectedColors.any((color) => colorField.contains(color));
+    }).toList();
+  }
   final ValueNotifier<List<List<String>>> _filteredData = ValueNotifier([]);
   late CardDataLoader _dataLoader;
   bool _loading = true;
@@ -41,7 +51,7 @@ class _CSVImageScreenState extends State<CSVImageScreen> with AutomaticKeepAlive
     _searchQuery = query;
     _debounce?.cancel();
     _debounce = Timer(const Duration(milliseconds: 300), () {
-      _filteredData.value = _dataLoader.filter(_searchQuery);
+      _filteredData.value = _filterWithColors(_dataLoader.filter(_searchQuery));
     });
     //id|name|rarity|type|attribute|power|counter|color|card_type|effect|trigger_text|image_url|alternate_art|series_id|series_name
     // holding csv values here for now
@@ -75,23 +85,50 @@ class _CSVImageScreenState extends State<CSVImageScreen> with AutomaticKeepAlive
       appBar: AppBar(
         title: const Text('One Piece Card Searcher'),
         bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(56),
-          child: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: TextField(
-              controller: _controller,
-              onChanged: _onSearchChanged,
-              decoration: InputDecoration(
-                hintText: 'Search (multiple words supported)...',
-                filled: true,
-                fillColor: Colors.white,
-                prefixIcon: const Icon(Icons.search),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
+          preferredSize: const Size.fromHeight(96),
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: TextField(
+                  controller: _controller,
+                  onChanged: _onSearchChanged,
+                  decoration: InputDecoration(
+                    hintText: 'Search (multiple words supported)...',
+                    filled: true,
+                    fillColor: Colors.white,
+                    prefixIcon: const Icon(Icons.search),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
                 ),
               ),
-            ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                child: Wrap(
+                  spacing: 8,
+                  children: _colorOptions.map((color) {
+                    return FilterChip(
+                      label: Text(color[0].toUpperCase() + color.substring(1)),
+                      selected: _selectedColors.contains(color),
+                      onSelected: (selected) {
+                        setState(() {
+                          if (selected) {
+                            _selectedColors.add(color);
+                          } else {
+                            _selectedColors.remove(color);
+                          }
+                          // Re-filter after color change
+                          _filteredData.value = _filterWithColors(_dataLoader.filter(_searchQuery));
+                        });
+                      },
+                    );
+                  }).toList(),
+                ),
+              ),
+            ],
           ),
         ),
       ),
@@ -116,7 +153,7 @@ class _CSVImageScreenState extends State<CSVImageScreen> with AutomaticKeepAlive
                     final row = data[index];
                     final id = row[0];
                     return GestureDetector(
-                      onTap: () => _openFullScreen(context, id),
+                      onTap: () => _openFullScreen(context, CardDataLoader().assetPathForId(id)),
                       child: Card(
                         elevation: 2,
                         shape: RoundedRectangleBorder(
