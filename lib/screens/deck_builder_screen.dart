@@ -228,6 +228,51 @@ class DeckBuilderScreenState extends State<DeckBuilderScreen> {
                       const SizedBox(width: 8),
                       if (_deckSize == 50)
                         const Icon(Icons.check_circle, color: Colors.green),
+                      if (_editingCardIndex != null)
+                        ...[
+                          const SizedBox(width: 24),
+                          Builder(
+                            builder: (context) {
+                              final cardId = _deckCards.keys.elementAt(_editingCardIndex!);
+                              return Row(
+                                children: [
+                                  IconButton(
+                                    icon: const Icon(Icons.remove_circle, color: Colors.black, size: 32),
+                                    onPressed: () {
+                                      setState(() {
+                                        _deckCards[cardId] = (_deckCards[cardId]! - 1).clamp(1, 99);
+                                        if (_deckCards[cardId] == 0) {
+                                          _deckCards.remove(cardId);
+                                          _editingCardIndex = null;
+                                        }
+                                      });
+                                    },
+                                  ),
+                                  const SizedBox(width: 8),
+                                  IconButton(
+                                    icon: const Icon(Icons.add_circle, color: Colors.black, size: 32),
+                                    onPressed: () {
+                                      setState(() {
+                                        _deckCards[cardId] = (_deckCards[cardId]! + 1).clamp(1, 99);
+                                      });
+                                    },
+                                  ),
+                                  const SizedBox(width: 8),
+                                  IconButton(
+                                    icon: const Icon(Icons.close, color: Colors.redAccent, size: 32),
+                                    tooltip: 'Remove card from deck',
+                                    onPressed: () {
+                                      setState(() {
+                                        _deckCards.remove(cardId);
+                                        _editingCardIndex = null;
+                                      });
+                                    },
+                                  ),
+                                ],
+                              );
+                            },
+                          ),
+                        ],
                     ],
                   ),
                 ),
@@ -253,10 +298,18 @@ class DeckBuilderScreenState extends State<DeckBuilderScreen> {
                         },
                         child: Stack(
                           children: [
-                            CardImageWidget(
-                              id: card['id'],
-                              height: 60,
-                              borderRadius: 8,
+                            Container(
+                              decoration: BoxDecoration(
+                                border: _editingCardIndex == i
+                                    ? Border.all(color: Colors.blueAccent, width: 4)
+                                    : null,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: CardImageWidget(
+                                id: card['id'],
+                                height: 60,
+                                borderRadius: 8,
+                              ),
                             ),
                             Positioned.fill(
                               child: Align(
@@ -275,40 +328,6 @@ class DeckBuilderScreenState extends State<DeckBuilderScreen> {
                                 ),
                               ),
                             ),
-                            if (_editingCardIndex == i)
-                              Positioned.fill(
-                                child: Container(
-                                  color: Colors.black.withOpacity(0.3),
-                                  child: Center(
-                                    child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      children: [
-                                        IconButton(
-                                          icon: const Icon(Icons.remove_circle, color: Colors.white, size: 32),
-                                          onPressed: () {
-                                            setState(() {
-                                              _deckCards[cardId] = (_deckCards[cardId]! - 1).clamp(1, 99);
-                                              if (_deckCards[cardId] == 0) {
-                                                _deckCards.remove(cardId);
-                                                _editingCardIndex = null;
-                                              }
-                                            });
-                                          },
-                                        ),
-                                        const SizedBox(width: 16),
-                                        IconButton(
-                                          icon: const Icon(Icons.add_circle, color: Colors.white, size: 32),
-                                          onPressed: () {
-                                            setState(() {
-                                              _deckCards[cardId] = (_deckCards[cardId]! + 1).clamp(1, 99);
-                                            });
-                                          },
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ),
                           ],
                         ),
                       );
